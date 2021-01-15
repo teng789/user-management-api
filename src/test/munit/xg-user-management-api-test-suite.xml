@@ -374,6 +374,11 @@ payload.data must equalToResource("data/users/get_by_username/http-users-get-by-
 }]]]></http:uri-params>
 			</http:request>
 		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="e9af9f76-8b3e-49f1-9809-25dd85496377" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="f5d315ce-7b46-4416-ac88-286a4ef8e5b6" actual="#[payload.responseCode]" expected="#[200]" />
+			<munit-tools:assert-equals doc:name="Assert Response Data is Expected" doc:id="02acc36e-3292-47f3-94d7-6e36b9ec87b2" actual="#[payload.data]" expected="#[{}]" />
+		</munit:validation>
 	</munit:test>
 	<munit:test name="xg-user-management-api-test-suite-delete:\users\(username):db-connectivity-error-test" doc:id="b83310a5-ec0d-4585-80d1-a133c1c71387" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
 			<munit:enable-flow-sources >
@@ -405,11 +410,6 @@ payload.data must equalToResource("data/users/get_by_username/http-users-get-by-
 }]]]></http:uri-params>
 			</http:request>
 		</munit:execution>
-		<munit:validation >
-			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="e9af9f76-8b3e-49f1-9809-25dd85496377" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
-			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="f5d315ce-7b46-4416-ac88-286a4ef8e5b6" actual="#[payload.responseCode]" expected="#[200]" />
-			<munit-tools:assert-equals doc:name="Assert Response Data is Expected" doc:id="02acc36e-3292-47f3-94d7-6e36b9ec87b2" actual="#[payload.data]" expected="#[{}]" />
-		</munit:validation>
 		</munit:test>
 	<munit:test name="xg-user-management-api-test-suite:no-x-auth-token-test" doc:id="475ddb01-e510-4cf9-8c1b-504fd7d31a8b" expectedErrorType="HTTP:UNAUTHORIZED">
 		<munit:enable-flow-sources >
