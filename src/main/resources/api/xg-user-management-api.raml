@@ -1,0 +1,91 @@
+#%RAML 1.0
+title: xg-user-management-api.raml
+
+types:
+  UserRequest: !include schema/user-request-schema.raml
+  
+/users:
+  get:
+    description: Retrieves all users
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "SUCCESS",
+                "responseCode": 200,
+                "data": {
+                  "content": !include examples/user-bulk-response-example.json,
+                  "size": 10
+                }
+                "trackerId": "db5eb040-55a6-11eb-b193-38f9d364650f"
+              }
+  post:
+    description: Creates one user
+    body:
+      application/json:
+        type: UserRequest
+        example: !include examples/user-request-example.json
+    responses:
+      201:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "SUCCESS",
+                "responseCode": 201,
+                "data": {
+                  "generatedKey": 25
+                },
+                "trackerId": "db5eb040-55a6-11eb-b193-38f9d364650f"
+              }
+  /bulk:
+    post:
+      description: Creates one or many users
+      body:
+        application/json:
+          type: UserRequest[]
+          example: !include examples/user-bulk-request-example.json
+      responses:
+        202:
+          body:
+            application/json:
+              example: |
+                {
+                  "status": "SUCCESS",
+                  "responseCode": 202,
+                  "data": {
+                    "message": "Bulk process of creating 2 users started."
+                  },
+                  "trackerId": "ed2c9cd0-55a9-11eb-89ff-38f9d364650f"
+                }
+          
+  /{username}:
+    get:
+      description: Retrieves a specific user by username
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                {
+                  "status": "SUCCESS",
+                  "responseCode": 200,
+                  "data": !include examples/user-response-example.json,
+                  "trackerId": "db5eb040-55a6-11eb-b193-38f9d364650f"
+                }
+    delete:
+      description: Deletes a specific user by username
+      responses:
+        202:
+          body:
+            application/json:
+              example: |
+                {
+                  "status": "SUCCESS",
+                  "responseCode": 200,
+                  "data": {},
+                  "trackerId": "ed2c9cd0-55a9-11eb-89ff-38f9d364650f"
+                }
+  

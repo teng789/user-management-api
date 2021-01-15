@@ -1,0 +1,28 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  username:
+    required: true
+    type: string
+    description: Username of the user
+  fullname:
+    required: true
+    type: string
+    description: Full name of the user
+  birthday:
+    required: true
+    type: string
+    pattern: "^([0-2][0-9]|(3)[0-1])(-)(((0)[0-9])|((1)[0-2]))(-)[0-9]{4}$"
+    description: Birthday of the user; dd-MM-yyyy
+  gender:
+    required: true
+    type: string
+    pattern: "([Ff][Ee])?[Mm][Aa][Ll][Ee]"
+    description: Gender of the user; case-insensitive variations of either male or female
+  dateRegistered:
+    required: false
+    type: string
+    pattern: "^([0-2][0-9]|(3)[0-1])(-)(((0)[0-9])|((1)[0-2]))(-)[0-9]{4}$"
+    description: Date of registration of the user; dd-MM-yyyy
+  

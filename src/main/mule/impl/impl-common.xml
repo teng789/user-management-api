@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<sub-flow name="impl-common:validate-token-auth" doc:id="5c0d795b-e0e9-48be-b4c1-c37a78d9463e" >
+		<validation:is-true doc:name="Validate Auth Token" doc:id="085d758d-1a6e-40b4-aa61-d742f80fee20" expression="#[(not isBlank(attributes.headers.'x-auth-token')) and (dw::core::Strings::isAlphanumeric(attributes.headers.'x-auth-token')) and (sizeOf(attributes.headers.'x-auth-token') == 16)]" message="${messages.auth.invalid.token}">
+			<error-mapping targetType="SECURITY:INVALID_AUTH_TOKEN" />
+		</validation:is-true>
+	</sub-flow>
+</mule>

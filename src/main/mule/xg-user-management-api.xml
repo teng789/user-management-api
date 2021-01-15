@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="xg-user-management-api-main">
+        <http:listener config-ref="xg-user-management-api-httpListenerConfig" path="${users.management.api.path}">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "status": p("constants.status.success"),
+  "responseCode": vars.httpStatus as Number default 200,
+  "data": payload,
+  "trackerId": correlationId
+}]]]></http:body>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "status": p("constants.status.error"),
+  "responseCode": vars.httpStatus as Number default 500,
+  "data": payload,
+  "trackerId": correlationId
+}]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:id="c6c4ec44-6afd-45e2-965e-ea0bf5a8ca27" name="impl-common:validate-token-auth" doc:name="impl-common:validate-token-auth"/>
+        <apikit:router config-ref="xg-user-management-api-config" />
+        <error-handler ref="error-handling-global"/>
+    </flow>
+	<flow name="delete:\users\(username):xg-user-management-api-config">
+        <flow-ref doc:name="impl-users:delete-user-by-username" doc:id="4f4f8ce6-6380-4f5a-b133-42d2acae5aa7" name="impl-users:delete-user-by-username"/>
+    </flow>
+    <flow name="get:\users:xg-user-management-api-config">
+		<flow-ref doc:name="impl-users:retrieve-all" doc:id="e1d15515-033b-48e4-bb57-00683a605997" name="impl-users:retrieve-all"/>
+    </flow>
+    <flow name="get:\users\(username):xg-user-management-api-config">
+		<flow-ref doc:name="impl-users:retrieve-by-username" doc:id="6dbbbbe6-3bcb-4511-8232-fda1c970eb23" name="impl-users:retrieve-by-username"/>
+        
+    </flow>
+    <flow name="post:\users\bulk:xg-user-management-api-config">
+		<flow-ref doc:name="impl-users:create-bulk" doc:id="8106a074-01f1-4200-9087-d436faae2e08" name="impl-users:create-bulk" />
+    </flow>
+    <flow name="post:\users:xg-user-management-api-config">
+		<flow-ref doc:name="impl-users:create" doc:id="cabff569-34f7-4a2e-8e6f-0d34f58f970f" name="impl-users:create"/>
+    </flow>
+</mule>

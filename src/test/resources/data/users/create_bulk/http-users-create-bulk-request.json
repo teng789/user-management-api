@@ -1,0 +1,13 @@
+[{ 
+   "username":"test_data_bulk11x", 
+   "fullname":"Test Data Bulk 11", 
+   "birthday":"02-12-1990", 
+   "gender":"female", 
+   "dateRegistered":"20-12-2012"
+},
+{ 
+   "username":"test_data_bulk22x", 
+   "fullname":"Test Data Bulk 22", 
+   "birthday":"02-07-1997", 
+   "gender":"male"
+}]

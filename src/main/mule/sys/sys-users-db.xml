@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="sys-users-db:retrieve-users" doc:id="5fd518f1-6e89-43b4-ac0c-6c7d5694ea1b" >
+		<logger level="INFO" doc:name="Log Retrieve Users Request" doc:id="f1e6b9a1-adee-48ee-8e47-10ed89847a46" message="Retrieve Users Request"/>
+		<db:select doc:name="JDBC MySQL SELECT Users" doc:id="f3c1822e-21bf-4ea6-a29e-168e2ca8edb4" config-ref="MySQL_Users_Database_Config">
+			<db:sql >SELECT
+u.uid, u.username, u.date_registered, ud.full_name, ud.birthday, ud.gender FROM user u
+inner join user_details ud on ud.user_id=u.uid
+where u.is_active = 1;
+</db:sql>
+		</db:select>
+		<ee:transform doc:name="Convert DB Result to JSON" doc:id="b6758399-c38d-44f8-8ab2-f9b7c9f170ce" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Retrieve Users Response" doc:id="ec151a77-accc-4d15-a566-bec3102598fd" message="Retrieve Users Response | Response Size: #[sizeOf(payload default [])]" />
+	</sub-flow>
+	<sub-flow name="sys-users-db:retrieve-user-by-username" doc:id="8d645ad8-dc5d-46df-ac3c-622e2089d682" >
+		<logger level="INFO" doc:name="Log Retrieve User by Username Request" doc:id="6581186f-6be4-4b65-8936-945a8a7b3c1c" message="Retrieve User by Username Request | Username: #[payload]"/>
+		<db:select doc:name="JDBC MySQL SELECT User by Username" doc:id="3fd543f4-cbcd-46a4-8a87-b27b141aa40e" config-ref="MySQL_Users_Database_Config">
+			<db:sql >SELECT
+u.uid, u.username, u.date_registered, ud.full_name, ud.birthday, ud.gender FROM user u
+inner join user_details ud on ud.user_id=u.uid
+where u.is_active = 1 and u.username = :username;
+</db:sql>
+			<db:input-parameters ><![CDATA[#[{"username":payload}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Convert DB Result to JSON" doc:id="352e46e0-016c-4ef2-8b20-034d5fe02ee0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Retrieve User by Username Response" doc:id="5fa915f5-8130-42d5-bc22-b87c521beef7" message="Retrieve User by Username Response | Response: #[(payload default [])[0]]" />
+	</sub-flow>
+	<sub-flow name="sys-users-db:create-user-account" doc:id="ca5aa624-2ffb-401f-ae4f-7c9dbb9ea832" >
+		<logger level="INFO" doc:name="Log Create User Account Request" doc:id="546054ad-ea97-4d26-989f-f94c06f6c2b5" message="Log Create User Account Request | Request: #[payload]"/>
+		<db:insert doc:name="JDBC MySQL INSERT User Account" doc:id="7e2d5280-8288-4ac9-9f82-39a4ad00b055" config-ref="MySQL_Users_Database_Config" autoGenerateKeys="true">
+			<db:sql >INSERT INTO `user` (`is_active`, `date_registered`, `username`) VALUES (:is_active, :date_registered, :username);</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"is_active" : payload."isActive",
+	"date_registered" : payload.dateRegistered,
+	"username": payload.username
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="uid" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<logger level="INFO" doc:name="Log Create User Account Response" doc:id="dcc3fc39-0676-4201-b70d-91d133d5921f" message="Log Create User Account Response"/>
+	</sub-flow>
+	<sub-flow name="sys-users-db:create-user-details" doc:id="5dfcc6ed-ec25-416b-8e61-c32472156a05" >
+		<logger level="INFO" doc:name="Log Create User Details Request" doc:id="933264ac-db87-43cc-8e28-feff28755240" message="Log Create User Details Request | Request: #[payload]"/>
+		<db:insert doc:name="JDBC MySQL INSERT User Details" doc:id="85a26acf-7a03-4068-91f7-1a97a13b6eae" config-ref="MySQL_Users_Database_Config">
+			<db:sql >
+INSERT INTO `user_details` (`user_id`, `full_name`, `birthday`, `gender`) VALUES (:user_id, :full_name, :birthday, :gender);
+</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"user_id" : payload.userAccountId,
+	"full_name" : payload.fullName,
+	"birthday": payload.birthday,
+	"gender": payload.gender
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Log Create User Details Response" doc:id="3b94d888-8b12-4eb3-bc00-5e83dc127406" message="Log Create User Details Response"/>
+	</sub-flow>
+	<sub-flow name="sys-users-db:deactivate-user" doc:id="82e7cc5d-9f99-426e-b3db-e1d84c6e7962" >
+		<logger level="INFO" doc:name="Log Deactivate User by Username Request" doc:id="3060ef24-703d-4e06-bc20-75b557fcb5f3" message="Deactivate User by Username Request | Username: #[payload]"/>
+		<db:update doc:name="JDBC MySQL UPDATE Deactivate User by Username" doc:id="45483192-8388-4e26-bae6-d9f10bbc7f60" config-ref="MySQL_Users_Database_Config">
+			<db:sql >UPDATE `user` SET `is_active` = '0' WHERE (`username` = :username and `uid` &lt;&gt; -1);</db:sql>
+			<db:input-parameters ><![CDATA[#[{"username":payload}]]]></db:input-parameters>
+		</db:update>
+		<logger level="INFO" doc:name="Log Deactivate User by Username Response" doc:id="df31d39d-22e3-4219-a58d-4780a0678585" message="Deactivate User by Username Response"/>
+	</sub-flow>
+</mule>

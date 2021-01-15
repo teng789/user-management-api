@@ -1,0 +1,23 @@
+[
+   {
+      "dateRegistered":"01-01-1999",
+      "username":"testdata1",
+      "fullName":"Mr. Test Data 1",
+      "gender":"Male",
+      "age":40
+   },
+   {
+      "dateRegistered":"01-02-1999",
+      "username":"testdata2",
+      "fullName":"Ms. Test Data 2",
+      "gender":"Female",
+      "age":35
+   },
+   {
+      "dateRegistered":"01-02-1999",
+      "username":"testdata3",
+      "fullName":"Mrs. Test Data 3",
+      "gender":"Female",
+      "age":35
+   }
+]

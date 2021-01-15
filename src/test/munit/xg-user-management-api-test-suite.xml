@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<munit:config name="xg-user-management-api-test-suite.xml" />
+	<http:request-config name="HTTP_MUnit_Self_Request_configuration" doc:name="HTTP Request configuration" doc:id="b6c7dd55-455e-4f4f-974c-ed1b49dc5a12" basePath="/api/v1">
+		<http:request-connection host="${config.host}" port="${config.port}" />
+	</http:request-config>
+	<munit:test name="xg-user-management-api-test-suite-get:\users:happy-path-test" doc:id="cfd03236-6857-4e97-aaf7-9c0ca7eddc74" description="Test">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT Users" doc:id="66f9496e-d43e-4871-a851-3af61e7d9547" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT Users" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json --- readUrl("classpath://data/users/get_all/db-users-get-all-response.json","application/json")]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="da268509-30d9-4734-b0c9-a59e4ec30bbe" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="2048fae3-9bb0-4a2f-90ff-d7908afe7385" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="88c66e88-73ee-4c1c-8ef2-4fb6b60da28a" actual="#[payload.responseCode]" expected="#[200]"/>
+			<munit-tools:assert doc:name="Assert Response Data is Expected" doc:id="f8ce55e1-7578-4199-97cf-6b940600b6bc" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+payload.data.content must equalToResource("data/users/get_all/http-users-get-all-expected-data.json","application/json")]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:assert-equals doc:name="Assert Response Data Size is Expected" doc:id="14c60314-11c6-417e-b34a-e23f3390120e" actual="#[payload.data.size]" expected="#[3]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-get:\users:no-data-test" doc:id="e606fc65-b535-44f0-806a-fabe0eb1a6c2" >
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT Users" doc:id="77b8e316-6197-49eb-86db-38e463ea8376" processor="db:select" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT Users" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json --- readUrl("classpath://data/users/get_all/db-users-get-all-no-data-response.json","application/json")]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="83c35647-b245-442e-88e7-51ce677e839f" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="2c2fd771-72b5-4ddc-b617-e215ac128ce1" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="d50763ca-5e1d-41e0-b915-dfb90c580901" actual="#[payload.responseCode]" expected="#[200]"/>
+			<munit-tools:assert doc:name="Assert Response Data is Expected" doc:id="e1fe655d-2c8f-4956-aa91-9b7783b7589e" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+payload.data.content must equalToResource("data/users/get_all/http-users-get-all-no-data-expected-data.json","application/json")]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:assert-equals doc:name="Assert Response Data Size is Expected" doc:id="bc10b0c6-166b-4a17-a5cf-cc73e101e6f0" actual="#[payload.data.size]" expected="#[0]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-get:\users:db-connectivity-error-test" doc:id="16ebe9c0-f4f5-49de-a478-694d962aacc9" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT Users" doc:id="d01d7334-8232-485a-b354-0f77ac47636a" processor="db:select" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT Users" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="ec98b236-42a9-4c25-bf54-01e175f1dd60" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-get:\users\(username):happy-path-test" doc:id="a3230896-2ce5-416e-9f9a-2c910177c3db" description="Test">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users\(username):xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT User by Username" doc:id="28a99113-8e3d-4b60-9080-2cb6802383ae" processor="db:select" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT User by Username" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json --- readUrl("classpath://data/users/get_by_username/db-users-get-by-username-response.json","application/json")]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users by Username" doc:id="0062838b-7e8f-4864-932a-b2daa489ecdd" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/{username}" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "testuser1"
+}]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="27983a77-f891-4c51-8456-2d96e611f31f" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="c27a1f92-a5ab-4a3a-ac00-8aa0463272af" actual="#[payload.responseCode]" expected="#[200]"/>
+			<munit-tools:assert doc:name="Assert Response Data is Expected" doc:id="abb8342b-50c2-4015-a24a-2f56cb4aaf5f" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+payload.data must equalToResource("data/users/get_by_username/http-users-get-by-username-expected-data.json","application/json")]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-get:\users\(username):no-data-test" doc:id="b9a4d79b-fd48-4bdb-ae50-095fadb71dfe" expectedErrorType="HTTP:NOT_FOUND">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users\(username):xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT User by Username" doc:id="58525e86-95a2-4501-ab2c-91aaf6d276f2" processor="db:select" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT User by Username" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json --- readUrl("classpath://data/users/get_by_username/db-users-get-by-username-no-data-response.json","application/json")]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users by Username" doc:id="36f19f58-9291-4da5-a716-6f4ba7ffbc20" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/{username}" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "testuser1"
+}]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-get:\users\(username):db-connectivity-error-test" doc:id="bf0c7b0a-f2e4-42aa-bf94-0903ceed6981" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="get:\users\(username):xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:select | JDBC MySQL SELECT User by Username" doc:id="7398276f-f0d1-4a29-9bc2-38f1fb1461e3" processor="db:select" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL SELECT User by Username" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users by Username" doc:id="80f4b7fd-b674-43e0-90e9-6dfd1783c2ce" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/{username}" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "testuser1"
+}]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-post:\users:happy-path-test" doc:id="9e0826e1-686d-49e7-af3e-546963636d17" description="Test">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="post:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Account" doc:id="15a42cfe-f92e-4c7d-9fac-099b07f23d43" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Account" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json --- readUrl("classpath://data/users/create/db-users-create-response.json","application/json")]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Details" doc:id="dd93d07d-b480-44e8-b17a-69fc792b1430" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Details" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload" doc:id="db9f1a8a-58c8-40a7-b5b5-9149c2bab532" >
+				<munit:payload value='#[output application/json --- readUrl("classpath://data/users/create/http-users-create-request.json","application/json")]' mediaType="application/json" />
+			</munit:set-event>
+			<http:request method="POST" doc:name="HTTP POST Users" doc:id="a9825e8e-a5d4-4606-bbd0-8a2b943a5f52" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="49e4fc3e-4532-42d3-b621-ea9a7350129d" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 201" doc:id="802ec376-3988-4c6c-b391-8517d08c6732" actual="#[payload.responseCode]" expected="#[201]" />
+			<munit-tools:assert-equals doc:name="Assert Response Data Generated Key" doc:id="42bc75be-b0bc-4adf-a9f9-d1cb71d896ad" actual="#[payload.data.generatedKey]" expected="#[100]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-post:\users:invalid-request-test" doc:id="524f426f-bb88-46cf-b9e0-f8d1c8923817" expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="post:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<munit:set-event doc:name="Set Request Payload" doc:id="37ea9d91-133e-4323-98c6-38e691b72a9a">
+				<munit:payload value='#[output application/json --- readUrl("classpath://data/users/create/http-users-create-invalid-data-request.json","application/json")]' mediaType="application/json" />
+			</munit:set-event>
+			<http:request method="POST" doc:name="HTTP POST Users" doc:id="0979e4a0-b5c0-47f9-8acf-15dafe3f9b1a" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-post:\users:db-connectivity-error-test" doc:id="2299e5dc-6b5c-4757-a06e-fc42c5b8e1e3" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="post:\users:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Account" doc:id="8cbf94e8-6daf-4493-99ee-e09f52fdb09e" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Account" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Details" doc:id="e5fe3c4d-08d7-4776-a2af-5f34fcbd1de7" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Details" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Request Payload" doc:id="fb0c5d14-f298-4c39-a8c0-efd97a065adc" >
+				<munit:payload value='#[output application/json --- readUrl("classpath://data/users/create/http-users-create-request.json","application/json")]' mediaType="application/json" />
+			</munit:set-event>
+			<http:request method="POST" doc:name="HTTP POST Users" doc:id="8646a623-ec96-4446-9924-64a6fbf475e7" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-post:\users\bulk:happy-path-test" doc:id="1e5bcd3a-11ba-46ae-8b5c-23628166629a" >
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="post:\users\bulk:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Account" doc:id="f9e39863-1dd2-4b27-b405-8c44f8e1fda2" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Account" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="db:insert | JDBC MySQL INSERT User Details" doc:id="bf67eebc-4b41-4ed3-9ff9-97f03a0a0abb" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL INSERT User Details" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Request Payload" doc:id="abcac882-a37d-4b9a-9c71-1bbcda8c48ac" >
+				<munit:payload value='#[output application/json --- readUrl("classpath://data/users/create_bulk/http-users-create-bulk-request.json","application/json")]' mediaType="application/json" />
+			</munit:set-event>
+			<http:request method="POST" doc:name="HTTP POST Users Bulk" doc:id="9ac7c2ab-ac0b-4f02-9f54-a729880e93de" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/bulk" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="0802238f-9abe-4ef2-81ef-74c9a7f13d3c" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 202" doc:id="74405250-11a2-48dd-ad62-98491e5df564" actual="#[payload.responseCode]" expected="#[202]" />
+			<munit-tools:assert-equals doc:name="Assert Response Data Message" doc:id="73b80912-9d81-4d06-b581-b976fe45c1c4" actual="#[payload.data.message]" expected='#[p("messages.create.bulk.started") replace "{0}" with "2"]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-post:\users\bulk:invalid-request-test" doc:id="7b5c2675-84a4-4a66-b856-1e3c4792cc7f" expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="post:\users\bulk:xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<munit:set-event doc:name="Set Request Payload" doc:id="f7aad91a-6603-4956-99c0-7d74c5a5c8ae" >
+				<munit:payload value='#[output application/json --- readUrl("classpath://data/users/create_bulk/http-users-create-bulk-invalid-data-request.json","application/json")]' mediaType="application/json" />
+			</munit:set-event>
+			<http:request method="POST" doc:name="HTTP POST Users Bulk" doc:id="908c9efc-165b-461c-ae4f-f42ead3c0915" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/bulk" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-delete:\users\(username):happy-path-test" doc:id="eba486b1-152c-49a1-85bb-473406c97b99" >
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+			<munit:enable-flow-source value="delete:\users\(username):xg-user-management-api-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="db:update | JDBC MySQL UPDATE Deactivate User by Username" doc:id="1638bfcc-f393-45a3-b0c0-0cddec301519" processor="db:update" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL UPDATE Deactivate User by Username" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="DELETE" doc:name="HTTP DELETE Users by Username" doc:id="0f9def59-3784-43d3-a525-41b6e2ac74da" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/{username}" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "testuser1"
+}]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite-delete:\users\(username):db-connectivity-error-test" doc:id="b83310a5-ec0d-4585-80d1-a133c1c71387" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+			<munit:enable-flow-sources >
+				
+				<munit:enable-flow-source value="delete:\users\(username):xg-user-management-api-config" />
+				<munit:enable-flow-source value="xg-user-management-api-main" />
+			</munit:enable-flow-sources>
+			<munit:behavior >
+			<munit-tools:mock-when doc:name="db:update | JDBC MySQL UPDATE Deactivate User by Username" doc:id="cfe13935-a8f6-4778-b34f-216bebe22658" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JDBC MySQL UPDATE Deactivate User by Username" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="DELETE" doc:name="HTTP DELETE Users by Username" doc:id="d99263ca-4c74-401d-b06f-ea3e8ab6d39f" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users/{username}" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32io33ise4k2qq1"
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "testuser1"
+}]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Response Status is SUCCESS" doc:id="e9af9f76-8b3e-49f1-9809-25dd85496377" actual="#[payload.status]" expected='#[p("constants.status.success")]' />
+			<munit-tools:assert-equals doc:name="Assert Response Code is 200" doc:id="f5d315ce-7b46-4416-ac88-286a4ef8e5b6" actual="#[payload.responseCode]" expected="#[200]" />
+			<munit-tools:assert-equals doc:name="Assert Response Data is Expected" doc:id="02acc36e-3292-47f3-94d7-6e36b9ec87b2" actual="#[payload.data]" expected="#[{}]" />
+		</munit:validation>
+		</munit:test>
+	<munit:test name="xg-user-management-api-test-suite:no-x-auth-token-test" doc:id="475ddb01-e510-4cf9-8c1b-504fd7d31a8b" expectedErrorType="HTTP:UNAUTHORIZED">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="b817f395-a16b-4aa1-bd1c-5eaff31c0629" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite:x-auth-token-is-not-alphanumeric-test" doc:id="8b1fd732-481d-4757-9c3e-efbe84ac773b" expectedErrorType="HTTP:UNAUTHORIZED">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="743f6a69-3d07-47c8-b8d3-87e62c7d587c" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j32!o33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite:x-auth-token-is-less-than-16-chars-test" doc:id="f7685de4-e728-4601-a71f-bc02b9000873" expectedErrorType="HTTP:UNAUTHORIZED">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="5a245d22-e12e-4868-bc9c-99334ec3ae41" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="xg-user-management-api-test-suite:x-auth-token-is-more-than-16-chars-test" doc:id="1c6ba72d-ea33-4298-95a9-c061a6b3609a" expectedErrorType="HTTP:UNAUTHORIZED">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="xg-user-management-api-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="HTTP GET Users" doc:id="55de0735-a67b-4fc1-aa75-460144c5ab4f" config-ref="HTTP_MUnit_Self_Request_configuration" path="/users" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x-auth-token" : "j1a32io33ise4k2qq1"
+}]]]></http:headers>
+			</http:request>
+		</munit:execution>
+	</munit:test>
+
+</mule>

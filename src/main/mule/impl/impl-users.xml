@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	<sub-flow name="impl-users:retrieve-all" doc:id="e0044725-ee1a-47ee-861f-093684f9f70b" >
+		<logger level="INFO" doc:name="Log Start Retrieve All Users" doc:id="7d0bf2e4-2f37-4b27-a49f-005ab332d7ba" message="Start Retrieve All Users"/>
+		<flow-ref doc:name="sys-users-db:retrieve-users" doc:id="0bf12e8c-8142-4c46-873d-54d6d65792b9" name="sys-users-db:retrieve-users"/>
+		<ee:transform doc:name="Set Response Payload" doc:id="d0f37c95-29ec-47dd-b322-310b83a263c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import modules::UsersUtil
+output application/json
+
+var responseContent = payload map UsersUtil::mapRetrieveUsersResponse($)
+---
+{
+	"content": responseContent,
+	"size": sizeOf(responseContent)	
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log End Retrieve All Users" doc:id="9cd474d6-0c9d-4fe0-b653-e2f08d31becd" message="End Retrieve All Users" />
+	</sub-flow>
+	<sub-flow name="impl-users:retrieve-by-username" doc:id="bdb49c48-542a-43ee-914b-ea62ec3c0c0d" >
+		<logger level="INFO" doc:name="Log Start Retrieve User by Username" doc:id="d0e6bd8d-1d2a-46ab-9a81-f2439b1f2167" message="Start Retrieve User by Username" />
+		<ee:transform doc:name="Set Input Parameters" doc:id="431b0bf9-e1c7-40c0-bd80-98a9369522e7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams."username"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="sys-users-db:retrieve-user-by-username" doc:id="0a4978b8-72d9-4848-ba4d-6e35244e0732" name="sys-users-db:retrieve-user-by-username"/>
+		<choice doc:name="Choice" doc:id="61cfc4ce-229d-4c0b-8cce-80f8a3c86944" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="Set Response Payload" doc:id="a6bb4b35-fb51-42fa-a6ec-5588f2b39329">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import modules::UsersUtil
+output application/json
+---
+UsersUtil::mapRetrieveUsersResponse(payload[0])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="USER:NOT_FOUND" doc:id="252336aa-e1e2-4120-9c88-d4cc1b469d07" type="USER:NOT_FOUND" description="No user found for this criteria."/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log End Retrieve User by Username" doc:id="67c8c622-7393-41b4-8c9e-45cc5426a3fa" message="End Retrieve User by Username"/>
+	</sub-flow>
+	<sub-flow name="impl-users:create-bulk" doc:id="c5f02735-f117-4e2f-9acb-2711e80ab039" >
+		<logger level="INFO" doc:name="Log Start Create User (Bulk)" doc:id="1569db0c-4adc-4b3a-9e96-e3954e43e3c3" message="Start Create User (Bulk)" />
+		<set-variable value="#[sizeOf(payload)]" doc:name="Set Request Size" doc:id="42cc0188-46be-4ff4-9534-6617e3c8b366" variableName="requestSize"/>
+		<async doc:name="Async" doc:id="24b205e5-c830-40b1-9900-681c17cca712">
+			<parallel-foreach doc:name="Parallel For Each" doc:id="9620dec9-2851-4d48-98b1-0ba35a985abb">
+				<flow-ref doc:name="impl-users:create" doc:id="4680717c-4133-4618-a821-e711c20e4a74" name="impl-users:create"/>
+			</parallel-foreach>
+		</async>
+		<ee:transform doc:name="Set Response Payload" doc:id="fa24e4f4-7ef0-4428-8922-7aa5ff111c01" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"message": p("messages.create.bulk.started") replace "{0}" with vars.requestSize
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[202]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log End Create User (Bulk)" doc:id="e7dfcc3a-2af3-475c-8d63-5e4eff249842" message="End Create User (Bulk)" />
+	</sub-flow>
+	<sub-flow name="impl-users:create" doc:id="d63e87d2-1dae-4ea0-b628-8d4c1ab89e35" >
+		<logger level="INFO" doc:name="Log Start Create User" doc:id="7aba7c37-2ad2-4109-8bf7-57ba343ffb65" message="Start Create User"/>
+		<flow-ref doc:name="impl-users:create-user-account" doc:id="6c4ab51b-bf09-442f-b8ab-7a3175731344" name="impl-users:create-user-account" target="createUserAccountResponse"/>
+		<flow-ref doc:name="impl-users:create-user-details" doc:id="890941c0-4426-4a89-b25f-c2ecdf21138c" name="impl-users:create-user-details"/>
+		<ee:transform doc:name="Set Response Payload" doc:id="b7239ee3-17f6-482b-b0f2-89fa46841e9b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"generatedKey": vars.createUserAccountResponse.generatedKeys.GENERATED_KEY
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[201]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log End Create User" doc:id="a20af771-c0d6-4a0a-a1a3-71f00f1c7f39" message="Start Create User" />
+	</sub-flow>
+	<sub-flow name="impl-users:create-user-account" doc:id="b9c929de-fe19-4629-a7bc-a07feac816ce" >
+		<ee:transform doc:name="Set User Account Parameters" doc:id="ea91b34a-44aa-4e90-9e98-5f3a46ff5180">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import modules::UsersUtil
+output application/json
+---
+{
+	"isActive" : p("constants.active.true"),
+	"dateRegistered" : ((payload.dateRegistered default (now() as UsersUtil::date_yyyyMMdd))
+		as UsersUtil::date_ddMMyyyy) as UsersUtil::date_yyyyMMdd,
+	"username": payload.username
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="sys-users-db:create-user-account" doc:id="513861c5-ba7c-4bf2-9b9b-2f2e66228afe" name="sys-users-db:create-user-account" />
+	</sub-flow>
+	<sub-flow name="impl-users:create-user-details" doc:id="45facb22-57d0-423f-925e-cb340c06e5c1" >
+		<ee:transform doc:name="Set User Details Parameters" doc:id="5f3e1bb4-4c10-4594-a052-7d8a52049f73">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import modules::UsersUtil
+output application/json
+---
+{
+	"userAccountId": vars.createUserAccountResponse.generatedKeys.GENERATED_KEY,
+	"fullName": payload.fullname,
+	"birthday": (payload.birthday as UsersUtil::date_ddMMyyyy) as UsersUtil::date_yyyyMMdd,
+	"gender": UsersUtil::getGenderCode(payload.gender)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="sys-users-db:create-user-details" doc:id="13fbbe80-df14-44fb-af01-f3988ebba994" name="sys-users-db:create-user-details"/>
+	</sub-flow>
+	<sub-flow name="impl-users:delete-user-by-username" doc:id="8f5437cb-a454-4756-9509-23a59a07e3a3" >
+		<logger level="INFO" doc:name="Log Start Delete User" doc:id="7f72e493-65ba-4f06-9f27-404e063a62e7" message="Start Delete User" />
+		<ee:transform doc:name="Set Input Parameters" doc:id="94d96486-9eb9-4b57-a492-a9406d4fa7b2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams."username"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="sys-users-db:deactivate-user" doc:id="5ec44b08-2e0e-4edc-92f9-ce0f553dd660" name="sys-users-db:deactivate-user"/>
+		<ee:transform doc:name="Set Response Payload" doc:id="8c684768-98f5-43f1-ba62-f4bb6a80299e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log End Delete User" doc:id="8adfb3e1-cc17-483d-82f9-cb1d8fa7059a" message="End Delete User" />
+	</sub-flow>
+</mule>

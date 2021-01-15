@@ -1,0 +1,51 @@
+[
+  {
+    "dateRegistered": "12-01-2000",
+    "username": "USER3active",
+    "fullName": "Three Active",
+    "gender": "Female",
+    "age": 35
+  },
+  {
+    "dateRegistered": "01-01-1999",
+    "username": "no-match",
+    "fullName": "full name",
+    "gender": "Male",
+    "age": 243
+  },
+  {
+    "dateRegistered": "20-08-2012",
+    "username": "john123",
+    "fullName": "John White Smith",
+    "gender": "Male",
+    "age": 30
+  },
+  {
+    "dateRegistered": "20-08-2012",
+    "username": "john123x",
+    "fullName": "John White Smith 2",
+    "gender": "Male",
+    "age": 30
+  },
+  {
+    "dateRegistered": "20-08-2012",
+    "username": "john4123x",
+    "fullName": "John White Smith 4",
+    "gender": "Male",
+    "age": 30
+  },
+  {
+    "dateRegistered": "20-08-2012",
+    "username": "john5",
+    "fullName": "John White Smith 5",
+    "gender": "Male",
+    "age": 30
+  },
+  {
+    "dateRegistered": "20-08-2012",
+    "username": "test_data_bulk2",
+    "fullName": "Test Data Bulk 2",
+    "gender": "Male",
+    "age": 23
+  }
+]

@@ -1,0 +1,26 @@
+[
+	{
+		"uid": "1",
+		"username": "testdata1",
+		"date_registered": "1999-01-01",
+		"full_name": "Mr. Test Data 1",
+		"birthday": "1980-05-06",
+		"gender": "M"
+	},
+	{
+		"uid": "1",
+		"username": "testdata2",
+		"date_registered": "1999-02-01",
+		"full_name": "Ms. Test Data 2",
+		"birthday": "1985-05-16",
+		"gender": "F"
+	},
+	{
+		"uid": "1",
+		"username": "testdata3",
+		"date_registered": "1999-02-01",
+		"full_name": "Mrs. Test Data 3",
+		"birthday": "1985-04-26",
+		"gender": "F"
+	}
+]
